@@ -89,34 +89,37 @@ const seed = ({ topicData, userData, articleData, commentData }) => {
 
       const queryArticleStr = format(
         `INSERT INTO articles (title, topic, author, body, created_at, votes, article_img_url)
-        VALUES %L RETURNING *`, formattedArticles
+        VALUES %L RETURNING *`,
+        formattedArticles
       );
       return db.query(queryArticleStr);
     })
-    .then(({ rows: insertedArticles }) => {
+    .then((result) => {
+      console.log("result", result);
+      const insertedArticles = result.rows;
       const articleIdLookup = {};
       insertedArticles.forEach((article) => {
         articleIdLookup[article.title] = article.article_id;
       });
-    
+
       const formattedComments = commentData.map((comment) => {
         return [
-          articleIdLookup[comment.article_title], // <-- title -> id
+          articleIdLookup[comment.article_title], 
           comment.body,
           comment.votes,
           comment.author,
           comment.created_at,
         ];
       });
-    
+
       const queryCommentStr = format(
         `INSERT INTO comments (article_id, body, votes, author, created_at)
          VALUES %L RETURNING *;`,
         formattedComments
       );
-    
+
       return db.query(queryCommentStr);
-    })
+    });
 };
 
 module.exports = seed;

@@ -1,5 +1,6 @@
 const db = require("../connection");
 const format = require("pg-format");
+const createLookUpObject = require("../seeds/utils-seed");
 
 const seed = ({ topicData, userData, articleData, commentData }) => {
   return db
@@ -57,7 +58,7 @@ const seed = ({ topicData, userData, articleData, commentData }) => {
       });
 
       const queryTopicStr = format(
-        `INSERT INTO topics (slug, description, img_url) VALUES %L RETURNING *`,
+        `INSERT INTO topics (slug, description, img_url) VALUES %L`,
         formattedTopics
       );
 
@@ -69,7 +70,7 @@ const seed = ({ topicData, userData, articleData, commentData }) => {
       });
 
       const queryUserStr = format(
-        `INSERT INTO users (username, name, avatar_url) VALUES %L RETURNING *`,
+        `INSERT INTO users (username, name, avatar_url) VALUES %L`,
         formattedUsers
       );
       return db.query(queryUserStr);
@@ -89,22 +90,27 @@ const seed = ({ topicData, userData, articleData, commentData }) => {
 
       const queryArticleStr = format(
         `INSERT INTO articles (title, topic, author, body, created_at, votes, article_img_url)
-        VALUES %L RETURNING *`,
+        VALUES %L RETURNING title, article_id`,
         formattedArticles
       );
       return db.query(queryArticleStr);
     })
     .then((result) => {
-      console.log("result", result);
       const insertedArticles = result.rows;
-      const articleIdLookup = {};
-      insertedArticles.forEach((article) => {
-        articleIdLookup[article.title] = article.article_id;
-      });
+      //console.log("result", result);
 
+      const articleIdLookup = createLookUpObject(
+        insertedArticles,
+        "title",
+        "article_id"
+      );
+      // insertedArticles.forEach((article) => {
+      //   articleIdLookup[article.title] = article.article_id;
+      // });
+      console.log(articleIdLookup);
       const formattedComments = commentData.map((comment) => {
         return [
-          articleIdLookup[comment.article_title], 
+          articleIdLookup[comment.article_title],
           comment.body,
           comment.votes,
           comment.author,
@@ -114,7 +120,7 @@ const seed = ({ topicData, userData, articleData, commentData }) => {
 
       const queryCommentStr = format(
         `INSERT INTO comments (article_id, body, votes, author, created_at)
-         VALUES %L RETURNING *;`,
+         VALUES %L;`,
         formattedComments
       );
 

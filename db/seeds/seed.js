@@ -97,17 +97,13 @@ const seed = ({ topicData, userData, articleData, commentData }) => {
     })
     .then((result) => {
       const insertedArticles = result.rows;
-      //console.log("result", result);
 
       const articleIdLookup = createLookUpObject(
         insertedArticles,
         "title",
         "article_id"
       );
-      // insertedArticles.forEach((article) => {
-      //   articleIdLookup[article.title] = article.article_id;
-      // });
-      console.log(articleIdLookup);
+
       const formattedComments = commentData.map((comment) => {
         return [
           articleIdLookup[comment.article_title],

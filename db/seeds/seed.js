@@ -2,12 +2,16 @@ const db = require("../connection");
 const format = require("pg-format");
 const createLookUpObject = require("../seeds/utils-seed");
 
+let articleIdLookup;
+
 const seed = ({
   topicData,
   userData,
   articleData,
   commentData,
   userTopicData,
+  emojisData,
+  emojiArticleUserData
 }) => {
   return (
     db
@@ -158,7 +162,7 @@ const seed = ({
       .then((result) => {
         const insertedArticles = result.rows;
 
-        const articleIdLookup = createLookUpObject(
+        articleIdLookup = createLookUpObject(
           insertedArticles,
           "title",
           "article_id"
@@ -192,6 +196,40 @@ const seed = ({
           formatedUserTopic
         );
         return db.query(queryUserTopicStr);
+      })
+      .then(() => {
+        const formatedEmojis = emojisData.map((emoji) => {
+          return [emoji.emoji];
+        });
+
+        const queryEmojiStr = format(
+          `INSERT INTO emojis (emoji) VALUES %L RETURNING *`,
+          formatedEmojis
+        );
+        return db.query(queryEmojiStr);
+      })
+      .then((result) => {
+        const insertedEmojis = result.rows
+        const emojiLookup = createLookUpObject(
+          insertedEmojis,
+          "emoji",
+          "emoji_id"
+        );
+
+        const formatedEmojiArticleUser = emojiArticleUserData.map((emojiArticleUser) => {
+          return [
+            emojiLookup[emojiArticleUser.emoji],
+            emojiArticleUser.username,
+            articleIdLookup[emojiArticleUser.article_title]
+          ]
+        });
+
+        const queryEmojiArticleUserStr = format(
+          `INSERT INTO emoji_article_user (emoji_id, username, article_id) VALUES %L RETURNING *`,
+          formatedEmojiArticleUser
+        );
+        console.log(queryEmojiArticleUserStr);
+        return db.query(queryEmojiArticleUserStr);
       })
   );
 };

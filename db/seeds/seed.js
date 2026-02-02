@@ -11,7 +11,8 @@ const seed = ({
   commentData,
   userTopicData,
   emojisData,
-  emojiArticleUserData
+  emojiArticleUserData,
+  userArticleVotesData
 }) => {
   return (
     db
@@ -225,11 +226,27 @@ const seed = ({
         });
 
         const queryEmojiArticleUserStr = format(
-          `INSERT INTO emoji_article_user (emoji_id, username, article_id) VALUES %L RETURNING *`,
+          `INSERT INTO emoji_article_user (emoji_id, username, article_id) VALUES %L`,
           formatedEmojiArticleUser
         );
-        console.log(queryEmojiArticleUserStr);
         return db.query(queryEmojiArticleUserStr);
+      })
+      .then(() => {
+        const formattedVotes = userArticleVotesData.map((vote) => {
+          return [
+            vote.username,
+            articleIdLookup[vote.article_title],
+            vote.vote_count,
+          ];
+        });
+
+        const queryVotesStr = format(
+          `INSERT INTO user_article_votes (username, article_id, vote_count)
+           VALUES %L;`,
+          formattedVotes
+        );
+
+        return db.query(queryVotesStr);
       })
   );
 };

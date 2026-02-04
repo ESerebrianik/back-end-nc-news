@@ -14,7 +14,10 @@ const usersRouter = require("./routes/users.routes");
 app.use("/api/users", usersRouter);
 
 app.use((err, req, res, next) => {
-    console.log("ERROR:", err); // чтобы увидеть причину в терминале
+    if (err.status && err.msg) {
+      return res.status(err.status).send({ msg: err.msg });
+    }
+    console.log("ERROR:", err);
     res.status(500).send({ msg: "Internal Server Error" });
   });
 

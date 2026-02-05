@@ -252,5 +252,73 @@ describe("POST /api/articles/:article_id/comments", () => {
             expect(body.msg).toBe("User not found");
           });
       });
-})
+});
+
+describe("PATCH /api/articles/:article_id", () => {
+    test("200: should increment votes by inc_votes and return the updated article", () => {
+        return request(app)
+          .patch("/api/articles/1")
+          .send({ inc_votes: 1 })
+          .expect(200)
+          .then(({ body }) => {
+            const { article } = body;
+            expect(article).toBeObject();
+            expect(article.article_id).toBe(1);
+            expect(article.votes).toBeNumber();
+            expect(article.votes).toBe(101); 
+          });
+      });
+    
+      test("200: should decrement votes when inc_votes is negative", () => {
+        return request(app)
+          .patch("/api/articles/1")
+          .send({ inc_votes: -100 })
+          .expect(200)
+          .then(({ body }) => {
+            const { article } = body;
+            expect(article.article_id).toBe(1);
+            expect(article.votes).toBe(0);
+          });
+      });
+    
+      test("400: should return Bad request when article_id is not a number", () => {
+        return request(app)
+          .patch("/api/articles/not-a-number")
+          .send({ inc_votes: 1 })
+          .expect(400)
+          .then(({ body }) => {
+            expect(body.msg).toBe("Bad request");
+          });
+      });
+    
+      test("400: should return Bad request when inc_votes is missing", () => {
+        return request(app)
+          .patch("/api/articles/1")
+          .send({})
+          .expect(400)
+          .then(({ body }) => {
+            expect(body.msg).toBe("Bad request");
+          });
+      });
+    
+      test("400: should return Bad request when inc_votes is not a number", () => {
+        return request(app)
+          .patch("/api/articles/1")
+          .send({ inc_votes: "one" })
+          .expect(400)
+          .then(({ body }) => {
+            expect(body.msg).toBe("Bad request");
+          });
+      });
+    
+      test("404: should return Article not found when article_id does not exist", () => {
+        return request(app)
+          .patch("/api/articles/9999")
+          .send({ inc_votes: 1 })
+          .expect(404)
+          .then(({ body }) => {
+            expect(body.msg).toBe("Article not found");
+          });
+      });
+});
   

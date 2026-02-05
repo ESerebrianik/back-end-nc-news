@@ -3,6 +3,7 @@ const {
   getArticleById: getArticleByIdService,
   getCommentsByArticleId: getCommentsByArticleIdService,
   addCommentByArticleId: addCommentByArticleIdService,
+  updateArticleVotesById: updateArticleVotesByIdService
    } = require("../services/articles.service");
 
 exports.getArticles = (req, res, next) => {
@@ -50,6 +51,21 @@ exports.postCommentByArticleId = (req, res, next) => {
   addCommentByArticleIdService(article_id, username, body)
     .then((comment) => {
       res.status(201).send({ comment });
+    })
+    .catch(next);
+};
+
+exports.patchArticleById = (req, res, next) => {
+  const { article_id } = req.params;
+  const { inc_votes } = req.body;
+
+  if (isNaN(Number(article_id))) {
+    return res.status(400).send({ msg: "Bad request" });
+  }
+
+  updateArticleVotesByIdService(article_id, inc_votes)
+    .then((article) => {
+      res.status(200).send({ article });
     })
     .catch(next);
 };

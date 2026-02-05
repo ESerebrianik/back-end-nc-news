@@ -2,6 +2,7 @@ const {
   getAllArticles, 
   getArticleById: getArticleByIdService,
   getCommentsByArticleId: getCommentsByArticleIdService,
+  addCommentByArticleId: addCommentByArticleIdService,
    } = require("../services/articles.service");
 
 exports.getArticles = (req, res, next) => {
@@ -34,6 +35,21 @@ exports.getCommentsByArticleId = (req, res, next) => {
   getCommentsByArticleIdService(article_id)
     .then((comments) => {
       res.status(200).send({ comments });
+    })
+    .catch(next);
+};
+
+exports.postCommentByArticleId = (req, res, next) => {
+  const { article_id } = req.params;
+  const { username, body } = req.body;
+
+  if (isNaN(Number(article_id))) {
+    return res.status(400).send({ msg: "Bad request" });
+  }
+
+  addCommentByArticleIdService(article_id, username, body)
+    .then((comment) => {
+      res.status(201).send({ comment });
     })
     .catch(next);
 };

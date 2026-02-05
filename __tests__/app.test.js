@@ -22,7 +22,7 @@ describe("GET /api/topics", () => {
   });
 });
 
-describe("/api/articles", () => {
+describe("GET /api/articles", () => {
   test("should return an object with key articles and value of an array of articles without body", () => {
     return request(app)
       .get("/api/articles")
@@ -61,7 +61,7 @@ describe("/api/articles", () => {
   });
 });
 
-describe("api/users", () => {
+describe("GET api/users", () => {
   test("shoul return an object with key users and value of an array with username, name, avatar_url", () => {
     return request(app)
       .get("/api/users")
@@ -80,7 +80,7 @@ describe("api/users", () => {
   });
 });
 
-describe("/api/articles/:article_id", () => {
+describe("GET /api/articles/:article_id", () => {
   test("200: should return an article object with the correct properties", () => {
     return request(app)
       .get("/api/articles/1")
@@ -120,7 +120,7 @@ describe("/api/articles/:article_id", () => {
   });
 });
 
-describe("/api/articles/:article_id/comments", () => {
+describe("GET /api/articles/:article_id/comments", () => {
     test("200: should return an object with key comments and value of an array of comments for the given article_id", () => {
       return request(app)
         .get("/api/articles/1/comments")
@@ -179,4 +179,78 @@ describe("/api/articles/:article_id/comments", () => {
         });
     });
   });
+
+describe("POST /api/articles/:article_id/comments", () => {
+    test("201: should add a comment for the given article_id and return the posted comment", () => {
+        const newComment = { username: "butter_bridge", body: "hello from test"};
+
+        return request(app)
+            .post("/api/articles/1/comments")
+            .send(newComment)
+            .expect(201)
+            .then(({ body }) => {
+                const { comment } = body;
+
+                expect(comment).toBeObject();
+                expect(comment.comment_id).toBeNumber();
+
+                expect(comment.body).toBe("hello from test");
+                expect(comment.author).toBe("butter_bridge");
+                expect(comment.article_id).toBe(1);
+
+                expect(comment.votes).toBeNumber();
+                expect(Date.parse(comment.created_at)).not.toBeNaN();
+        });
+    })
+
+    test("400: should return Bad request when article_id is not a number", () => {
+        return request(app)
+          .post("/api/articles/not-a-number/comments")
+          .send({ username: "butter_bridge", body: "hi" })
+          .expect(400)
+          .then(({ body }) => {
+            expect(body.msg).toBe("Bad request");
+          });
+      });
+    
+      test("404: should return Article not found when article_id does not exist", () => {
+        return request(app)
+          .post("/api/articles/9999/comments")
+          .send({ username: "butter_bridge", body: "hi" })
+          .expect(404)
+          .then(({ body }) => {
+            expect(body.msg).toBe("Article not found");
+          });
+      });
+    
+      test("400: should return Bad request when body is missing", () => {
+        return request(app)
+          .post("/api/articles/1/comments")
+          .send({ username: "butter_bridge" })
+          .expect(400)
+          .then(({ body }) => {
+            expect(body.msg).toBe("Bad request");
+          });
+      });
+    
+      test("400: should return Bad request when username is missing", () => {
+        return request(app)
+          .post("/api/articles/1/comments")
+          .send({ body: "hi" })
+          .expect(400)
+          .then(({ body }) => {
+            expect(body.msg).toBe("Bad request");
+          });
+      });
+    
+      test("404: should return User not found when username does not exist", () => {
+        return request(app)
+          .post("/api/articles/1/comments")
+          .send({ username: "not-a-real-user", body: "hi" })
+          .expect(404)
+          .then(({ body }) => {
+            expect(body.msg).toBe("User not found");
+          });
+      });
+})
   

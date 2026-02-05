@@ -119,3 +119,64 @@ describe("/api/articles/:article_id", () => {
       });
   });
 });
+
+describe("/api/articles/:article_id/comments", () => {
+    test("200: should return an object with key comments and value of an array of comments for the given article_id", () => {
+      return request(app)
+        .get("/api/articles/1/comments")
+        .expect(200)
+        .then(({ body }) => {
+          const { comments } = body;
+          expect(Array.isArray(comments)).toBe(true);
+          comments.forEach((comment) => {
+            expect(typeof comment.comment_id).toBe("number");
+            expect(typeof comment.votes).toBe("number");
+            const timestamp = Date.parse(comment.created_at);
+            expect(Number.isNaN(timestamp)).toBe(false);
+            expect(typeof comment.author).toBe("string");
+            expect(typeof comment.body).toBe("string");
+            expect(typeof comment.article_id).toBe("number");
+            expect(comment.article_id).toBe(1);
+          });
+        });
+    });
+  
+    test("200: should return comments sorted by created_at in descending order (most recent first)", () => {
+      return request(app)
+        .get("/api/articles/1/comments")
+        .expect(200)
+        .then(({ body }) => {
+          const { comments } = body;
+          const createdAts = comments.map((c) => Date.parse(c.created_at));
+          expect(createdAts).toBeSorted({ descending: true });
+        });
+    });
+  
+    test("200: should return an empty array when the article exists but has no comments", () => {
+      return request(app)
+        .get("/api/articles/2/comments")
+        .expect(200)
+        .then(({ body }) => {
+          expect(Array.isArray(body.comments)).toBe(true);
+        });
+    });
+  
+    test("400: should return bad request when article_id is not a number", () => {
+      return request(app)
+        .get("/api/articles/not-a-number/comments")
+        .expect(400)
+        .then(({ body }) => {
+          expect(body.msg).toBe("Bad request");
+        });
+    });
+  
+    test("404: should return not found when article_id does not exist", () => {
+      return request(app)
+        .get("/api/articles/9999/comments")
+        .expect(404)
+        .then(({ body }) => {
+          expect(body.msg).toBe("Article not found");
+        });
+    });
+  });
+  

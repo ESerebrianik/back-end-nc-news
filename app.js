@@ -4,6 +4,9 @@ const app = express();
 
 app.use(express.json());
 
+const apiRouter = require("./routes/api.routes");
+app.use("/api", apiRouter);
+
 const topicsRouter = require("./routes/topic.routes");
 app.use("/api/topics", topicsRouter);
 

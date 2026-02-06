@@ -1,7 +1,7 @@
 const db = require("../db/connection");
 const BadRequestError = require("../errors/BadRequestError");
 
-exports.fetchAllArticles = (sort_by = "created_at", order = "desc") => {
+exports.fetchAllArticles = (sort_by = "created_at", order = "desc", topic) => {
 
   const validSortBys = [
     "author",
@@ -18,7 +18,6 @@ exports.fetchAllArticles = (sort_by = "created_at", order = "desc") => {
 
   if (!validSortBys.includes(sort_by)) {
     throw new BadRequestError("Bad request");
-    // если ты ещё не на классах — return Promise.reject({status:400,msg:"Bad request"})
   }
 
   order = order.toLowerCase();
@@ -28,6 +27,14 @@ exports.fetchAllArticles = (sort_by = "created_at", order = "desc") => {
 
   const sortColumn =
     sort_by === "comment_count" ? "comment_count" : `articles.${sort_by}`;
+
+  const values = [];
+  let whereStr = "";
+
+  if (topic) {
+    values.push(topic);
+    whereStr = "WHERE articles.topic = $1"
+  }
 
   const queryStr = `
     SELECT
@@ -42,11 +49,12 @@ exports.fetchAllArticles = (sort_by = "created_at", order = "desc") => {
     FROM articles
     LEFT JOIN comments
       ON comments.article_id = articles.article_id
+      ${whereStr}
     GROUP BY articles.article_id
     ORDER BY ${sortColumn} ${order};
   `;
 
-  return db.query(queryStr).then(({ rows }) => rows);
+  return db.query(queryStr, values).then(({ rows }) => rows);
 };
 
 exports.fetchArticleById = (article_id) => {
@@ -90,3 +98,5 @@ exports.updateArticleVotesById = (article_id, inc_votes) => {
     )
     .then(({ rows }) => rows[0]);
 };
+
+

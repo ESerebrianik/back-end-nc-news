@@ -28,6 +28,7 @@ describe("GET /api/articles", () => {
       .get("/api/articles")
       .expect(200)
       .then(({ body }) => {
+        console.log(body);
         const { articles } = body;
         expect(Array.isArray(articles)).toBe(true);
         expect(articles.length).toBeGreaterThan(0);
@@ -363,7 +364,7 @@ describe("DELETE /api/comments/:comment_id", () => {
     });
   });
 
-  describe("GET /api/articles (sorting queries)", () => {
+describe("GET /api/articles (sorting queries)", () => {
     test("200: should sort articles by votes when sort_by=votes", () => {
       return request(app)
         .get("/api/articles?sort_by=votes")
@@ -409,6 +410,41 @@ describe("DELETE /api/comments/:comment_id", () => {
         .expect(400)
         .then(({ body }) => {
           expect(body.msg).toBe("Bad request");
+        });
+    });
+  });
+
+  describe("GET /api/articles (topic query)", () => {
+    test("200: should return only articles for the given topic", () => {
+      return request(app)
+        .get("/api/articles?topic=mitch")
+        .expect(200)
+        .then(({ body }) => {
+          const { articles } = body;
+          expect(articles).toBeArray();
+          articles.forEach((article) => {
+            expect(article.topic).toBe("mitch");
+            expect(article).not.toHaveProperty("body");
+          });
+        });
+    });
+  
+    test("200: should return an empty array when topic exists but has no articles", () => {
+      return request(app)
+        .get("/api/articles?topic=paper")
+        .expect(200)
+        .then(({ body }) => {
+          expect(body.articles).toBeArray();
+          expect(body.articles).toEqual([]);
+        });
+    });
+  
+    test("404: should return Topic not found when topic does not exist", () => {
+      return request(app)
+        .get("/api/articles?topic=not-a-topic")
+        .expect(404)
+        .then(({ body }) => {
+          expect(body.msg).toBe("Topic not found");
         });
     });
   });

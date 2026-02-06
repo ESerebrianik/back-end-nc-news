@@ -7,11 +7,20 @@ const {
  } = require("../models/articles.model");
 
 const { fetchUserByUsername } = require("../models/users.model");
+const { fetchTopicBySlug } = require("../models/topics.model");
 const BadRequestError = require("../errors/BadRequestError");
 const NotFoundError = require("../errors/NotFoundError");
 
-exports.getAllArticles = (sort_by, order) => {
-  return fetchAllArticles(sort_by, order);
+exports.getAllArticles = (sort_by, order, topic) => {
+  return fetchAllArticles(sort_by, order, topic).then((articles) => {
+    if(topic && articles.length === 0) {
+      return fetchTopicBySlug(topic).then((foundTopic) => {
+        if(!foundTopic) throw new NotFoundError("Topic not found");
+        return articles; 
+      })
+    }
+    return articles;
+  });
 };
 
 exports.getArticleById = (article_id) => {

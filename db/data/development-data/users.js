@@ -34,5 +34,25 @@ module.exports = [
     name: 'Jess Jelly',
     avatar_url:
       'https://vignette.wikia.nocookie.net/mrmen/images/4/4f/MR_JELLY_4A.jpg/revision/latest?cb=20180104121141'
+  },
+  {
+    username: "butter_bridge",
+    name: "Jonny",
+    avatar_url: "https://www.healthytherapies.com/wp-content/uploads/2016/06/Lime3.jpg"
+  },
+  {
+    username: "icellusedkars",
+    name: "Sam Kars",
+    avatar_url: "https://example.com/avatar.png"
+  },
+  {
+    username: "rogersop",
+    name: "Paul Rogers",
+    avatar_url: "https://example.com/avatar.png"
+  },
+  {
+    username: "lurker",
+    name: "Silent Reader",
+    avatar_url: "https://example.com/lurker.png"
   }
 ];

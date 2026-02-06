@@ -125,7 +125,6 @@ describe("GET /api/articles/:article_id", () => {
       .get("/api/articles/1")
       .expect(200)
       .then(({ body }) => {
-        const { article } = body;
         expect(article).toBeObject();
         expect(article.article_id).toBe(1);
         expect(article).toHaveProperty("comment_count");

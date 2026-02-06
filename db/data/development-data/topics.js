@@ -12,4 +12,7 @@ module.exports = [
     img_url:
       "https://images.pexels.com/photos/33242/cooking-ingredient-cuisine-kitchen.jpg?w=700&h=700",
   },
+  { description: "Cats everywhere", slug: "cats", img_url: "" },
+  { description: "Paper stuff", slug: "paper", img_url: "" },
+  { description: "All about Mitch", slug: "mitch", img_url: "" },
 ];

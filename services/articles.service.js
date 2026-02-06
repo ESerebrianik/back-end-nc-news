@@ -10,8 +10,8 @@ const { fetchUserByUsername } = require("../models/users.model");
 const BadRequestError = require("../errors/BadRequestError");
 const NotFoundError = require("../errors/NotFoundError");
 
-exports.getAllArticles = () => {
-  return fetchAllArticles();
+exports.getAllArticles = (sort_by, order) => {
+  return fetchAllArticles(sort_by, order);
 };
 
 exports.getArticleById = (article_id) => {

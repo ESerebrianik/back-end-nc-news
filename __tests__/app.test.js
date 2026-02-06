@@ -321,4 +321,95 @@ describe("PATCH /api/articles/:article_id", () => {
           });
       });
 });
+
+describe("DELETE /api/comments/:comment_id", () => {
+    test("204: should delete the given comment and return no content", () => {
+      return request(app)
+        .delete("/api/comments/1")
+        .expect(204)
+        .then(({ body }) => {
+          expect(body).toEqual({});
+        });
+    });
+  
+    test("400: should return Bad request when comment_id is not a number", () => {
+      return request(app)
+        .delete("/api/comments/not-a-number")
+        .expect(400)
+        .then(({ body }) => {
+          expect(body.msg).toBe("Bad request");
+        });
+    });
+  
+    test("404: should return Comment not found when comment_id does not exist", () => {
+      return request(app)
+        .delete("/api/comments/9999")
+        .expect(404)
+        .then(({ body }) => {
+          expect(body.msg).toBe("Comment not found");
+        });
+    });
+  
+    test("204: should actually remove the comment from the database", () => {
+      return request(app)
+        .delete("/api/comments/1")
+        .expect(204)
+        .then(() => {
+          return request(app).delete("/api/comments/1").expect(404);
+        })
+        .then(({ body }) => {
+          expect(body.msg).toBe("Comment not found");
+        });
+    });
+  });
+
+  describe("GET /api/articles (sorting queries)", () => {
+    test("200: should sort articles by votes when sort_by=votes", () => {
+      return request(app)
+        .get("/api/articles?sort_by=votes")
+        .expect(200)
+        .then(({ body }) => {
+          const votes = body.articles.map((a) => a.votes);
+          expect(votes).toBeSorted({ descending: true }); 
+        });
+    });
+  
+    test("200: should sort articles by created_at ascending when order=asc", () => {
+      return request(app)
+        .get("/api/articles?order=asc")
+        .expect(200)
+        .then(({ body }) => {
+          const dates = body.articles.map((a) => Date.parse(a.created_at));
+          expect(dates).toBeSorted({ descending: false });
+        });
+    });
+  
+    test("200: should sort articles by title ascending when sort_by=title&order=asc", () => {
+      return request(app)
+        .get("/api/articles?sort_by=title&order=asc")
+        .expect(200)
+        .then(({ body }) => {
+          const titles = body.articles.map((a) => a.title);
+          expect(titles).toBeSorted(); 
+        });
+    });
+  
+    test("400: should return Bad request when sort_by is invalid", () => {
+      return request(app)
+        .get("/api/articles?sort_by=not_a_column")
+        .expect(400)
+        .then(({ body }) => {
+          expect(body.msg).toBe("Bad request");
+        });
+    });
+  
+    test("400: should return Bad request when order is invalid", () => {
+      return request(app)
+        .get("/api/articles?order=sideways")
+        .expect(400)
+        .then(({ body }) => {
+          expect(body.msg).toBe("Bad request");
+        });
+    });
+  });
   

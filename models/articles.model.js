@@ -1,24 +1,52 @@
 const db = require("../db/connection");
+const BadRequestError = require("../errors/BadRequestError");
 
-exports.fetchAllArticles = () => {
-  return db
-    .query(
-      `SELECT 
-        articles.author,
-        articles.title,
-        articles.article_id,
-        articles.topic,
-        articles.created_at,
-        articles.votes,
-        articles.article_img_url,
-        COUNT(comments.comment_id)::INT AS comment_count
-      FROM articles
-      LEFT JOIN comments
-        ON comments.article_id = articles.article_id
-      GROUP BY articles.article_id
-      ORDER BY articles.created_at DESC;`
-    )
-    .then(({ rows }) => rows);
+exports.fetchAllArticles = (sort_by = "created_at", order = "desc") => {
+
+  const validSortBys = [
+    "author",
+    "title",
+    "article_id",
+    "topic",
+    "created_at",
+    "votes",
+    "article_img_url",
+    "comment_count",
+  ];
+
+  const validOrders = ["asc", "desc"];
+
+  if (!validSortBys.includes(sort_by)) {
+    throw new BadRequestError("Bad request");
+    // если ты ещё не на классах — return Promise.reject({status:400,msg:"Bad request"})
+  }
+
+  order = order.toLowerCase();
+  if (!validOrders.includes(order)) {
+    throw new BadRequestError("Bad request");
+  }
+
+  const sortColumn =
+    sort_by === "comment_count" ? "comment_count" : `articles.${sort_by}`;
+
+  const queryStr = `
+    SELECT
+      articles.author,
+      articles.title,
+      articles.article_id,
+      articles.topic,
+      articles.created_at,
+      articles.votes,
+      articles.article_img_url,
+      COUNT(comments.comment_id)::INT AS comment_count
+    FROM articles
+    LEFT JOIN comments
+      ON comments.article_id = articles.article_id
+    GROUP BY articles.article_id
+    ORDER BY ${sortColumn} ${order};
+  `;
+
+  return db.query(queryStr).then(({ rows }) => rows);
 };
 
 exports.fetchArticleById = (article_id) => {

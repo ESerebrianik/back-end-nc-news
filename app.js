@@ -13,6 +13,9 @@ app.use("/api/articles", articlesRouter);
 const usersRouter = require("./routes/users.routes");
 app.use("/api/users", usersRouter);
 
+const commentsRouter = require("./routes/comments.routes");
+app.use("/api/comments", commentsRouter);
+
 app.use((err, req, res, next) => {
     if (err.status) {
       return res.status(err.status).send({ msg: err.message });

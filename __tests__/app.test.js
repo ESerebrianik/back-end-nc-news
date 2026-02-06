@@ -119,6 +119,19 @@ describe("GET /api/articles/:article_id", () => {
         expect(body.msg).toBe("Article not found");
       });
   });
+
+  test("200: should include comment_count on the returned article", () => {
+    return request(app)
+      .get("/api/articles/1")
+      .expect(200)
+      .then(({ body }) => {
+        const { article } = body;
+        expect(article).toBeObject();
+        expect(article.article_id).toBe(1);
+        expect(article).toHaveProperty("comment_count");
+        expect(Number(article.comment_count)).not.toBeNaN();
+      });
+  }); 
 });
 
 describe("GET /api/articles/:article_id/comments", () => {
@@ -414,7 +427,7 @@ describe("GET /api/articles (sorting queries)", () => {
     });
   });
 
-  describe("GET /api/articles (topic query)", () => {
+describe("GET /api/articles (topic query)", () => {
     test("200: should return only articles for the given topic", () => {
       return request(app)
         .get("/api/articles?topic=mitch")

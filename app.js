@@ -3,6 +3,7 @@ const path = require("path");
 const app = express();
 
 app.use(express.json());
+console.log("STATIC DIR:", path.join(__dirname, "public"));
 
 app.use("/api", express.static(path.join(__dirname, "public")));
 
@@ -21,9 +22,9 @@ app.use("/api/users", usersRouter);
 const commentsRouter = require("./routes/comments.routes");
 app.use("/api/comments", commentsRouter);
 
-app.all("*", (req, res) => {
-  res.status(404).send({ msg: "Not found" });
-});
+app.use((req, res) => {
+    res.status(404).send({ msg: "Not found" });
+  });
 
 app.use((err, req, res, next) => {
   if (err.status) return res.status(err.status).send({ msg: err.message });

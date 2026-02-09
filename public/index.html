@@ -1,11 +1,263 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
-</head>
-<body>
-    <h1>Hello World</h1>
-</body>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="/api/style.css">
+    <title>NC News API Documentation</title>
+  </head>
+
+  <body>
+    <header>
+      <h1>NC News API</h1>
+      <p>
+        REST API for a news application. This documentation describes available
+        endpoints, queries, request bodies and example responses.
+      </p>
+      <p>
+        This page is served statically at <code>/api</code>.  
+        JSON documentation is available at <code>/api/endpoints</code>.
+      </p>
+      <nav>
+        <ul>
+          <li><a href="#overview">Overview</a></li>
+          <li><a href="#endpoints">Endpoints JSON</a></li>
+          <li><a href="#topics">Topics</a></li>
+          <li><a href="#users">Users</a></li>
+          <li><a href="#articles">Articles</a></li>
+          <li><a href="#comments">Comments</a></li>
+          <li><a href="#errors">Errors</a></li>
+        </ul>
+      </nav>
+    </header>
+
+    <main>
+      <section id="overview">
+        <h2>Overview</h2>
+        <p>Base path: <code>/api</code></p>
+        <p>All responses are returned in JSON format.</p>
+
+        <h3>Common response shapes</h3>
+        <ul>
+          <li><code>{ "topics": [...] }</code></li>
+          <li><code>{ "users": [...] }</code></li>
+          <li><code>{ "articles": [...] }</code></li>
+          <li><code>{ "article": {...} }</code></li>
+          <li><code>{ "comments": [...] }</code></li>
+          <li><code>{ "comment": {...} }</code></li>
+          <li><code>{ "msg": "..." }</code> for errors</li>
+        </ul>
+
+        <h3>Timestamps</h3>
+        <p>
+          Date fields (e.g. <code>created_at</code>) are returned as ISO strings,
+          for example: <code>2020-11-03T09:12:00.000Z</code>.
+        </p>
+      </section>
+
+      <!-- ENDPOINTS JSON -->
+      <section id="endpoints">
+        <h2>GET /api/endpoints</h2>
+        <p>
+          Returns a JSON object describing all available API endpoints.
+        </p>
+
+        <h3>Example response</h3>
+        <pre>
+{
+  "endpoints": {
+    "GET /api/topics": {
+      "description": "Returns all topics"
+    }
+  }
+}
+        </pre>
+      </section>
+
+      <!-- TOPICS -->
+      <section id="topics">
+        <h2>Topics</h2>
+
+        <h3>GET /api/topics</h3>
+        <p>Returns a list of all topics.</p>
+
+        <h4>Example response</h4>
+        <pre>
+{
+  "topics": [
+    {
+      "slug": "mitch",
+      "description": "All about Mitch",
+      "img_url": "..."
+    }
+  ]
+}
+        </pre>
+      </section>
+
+      <!-- USERS -->
+      <section id="users">
+        <h2>Users</h2>
+
+        <h3>GET /api/users</h3>
+        <p>Returns a list of all users.</p>
+
+        <h4>Example response</h4>
+        <pre>
+{
+  "users": [
+    {
+      "username": "butter_bridge",
+      "name": "Jonny",
+      "avatar_url": "https://..."
+    }
+  ]
+}
+        </pre>
+      </section>
+
+      <!-- ARTICLES -->
+      <section id="articles">
+        <h2>Articles</h2>
+
+        <h3>GET /api/articles</h3>
+        <p>
+          Returns a list of articles. Articles are sorted by
+          <code>created_at</code> in descending order by default.
+        </p>
+
+        <h4>Queries</h4>
+        <ul>
+          <li><code>sort_by</code> – column to sort by (default: created_at)</li>
+          <li><code>order</code> – <code>asc</code> or <code>desc</code> (default: desc)</li>
+          <li><code>topic</code> – filters articles by topic</li>
+        </ul>
+
+        <h4>Example response</h4>
+        <pre>
+{
+  "articles": [
+    {
+      "author": "butter_bridge",
+      "title": "Living in the shadow of a great man",
+      "article_id": 1,
+      "topic": "mitch",
+      "created_at": "2020-07-09T20:11:00.000Z",
+      "votes": 100,
+      "article_img_url": "https://...",
+      "comment_count": 11
+    }
+  ]
+}
+        </pre>
+
+        <h3>GET /api/articles/:article_id</h3>
+        <p>Returns a single article by ID, including <code>comment_count</code>.</p>
+
+        <h4>Example response</h4>
+        <pre>
+{
+  "article": {
+    "article_id": 1,
+    "title": "Living in the shadow of a great man",
+    "author": "butter_bridge",
+    "body": "I find this existence challenging",
+    "topic": "mitch",
+    "created_at": "2020-07-09T20:11:00.000Z",
+    "votes": 100,
+    "article_img_url": "https://...",
+    "comment_count": 11
+  }
+}
+        </pre>
+
+        <h3>GET /api/articles/:article_id/comments</h3>
+        <p>Returns comments for a given article.</p>
+
+        <h4>Example response</h4>
+        <pre>
+{
+  "comments": [
+    {
+      "comment_id": 1,
+      "votes": 16,
+      "created_at": "2020-04-06T12:17:00.000Z",
+      "author": "butter_bridge",
+      "body": "Great article!",
+      "article_id": 1
+    }
+  ]
+}
+        </pre>
+
+        <h3>POST /api/articles/:article_id/comments</h3>
+        <p>Adds a new comment to an article.</p>
+
+        <h4>Request body</h4>
+        <pre>
+{
+  "username": "butter_bridge",
+  "body": "Nice read!"
+}
+        </pre>
+
+        <h4>Example response</h4>
+        <pre>
+{
+  "comment": {
+    "comment_id": 999,
+    "article_id": 1,
+    "author": "butter_bridge",
+    "body": "Nice read!",
+    "votes": 0,
+    "created_at": "2026-02-09T10:00:00.000Z"
+  }
+}
+        </pre>
+
+        <h3>PATCH /api/articles/:article_id</h3>
+        <p>Updates an article’s vote count.</p>
+
+        <h4>Request body</h4>
+        <pre>
+{
+  "inc_votes": 1
+}
+        </pre>
+      </section>
+
+      <!-- COMMENTS -->
+      <section id="comments">
+        <h2>Comments</h2>
+
+        <h3>DELETE /api/comments/:comment_id</h3>
+        <p>Deletes a comment by ID.</p>
+        <p>Responds with status <code>204</code> and no content.</p>
+      </section>
+
+      <!-- ERRORS -->
+      <section id="errors">
+        <h2>Error handling</h2>
+
+        <ul>
+          <li><code>400</code> – Bad request</li>
+          <li><code>404</code> – Resource not found</li>
+          <li><code>500</code> – Internal server error</li>
+        </ul>
+
+        <h4>Example error</h4>
+        <pre>
+{
+  "msg": "Bad request"
+}
+        </pre>
+      </section>
+    </main>
+
+    <footer>
+      <p>
+        NC News API · Static documentation served from <code>/api</code>
+      </p>
+    </footer>
+  </body>
 </html>

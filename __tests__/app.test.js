@@ -625,8 +625,6 @@ describe("GET /api/articles (topic query)", () => {
   });
 });
 
-
-
 describe("GET /api/users/:username", () => {
   test("200: returns a user object", () => {
     return request(app)
@@ -650,3 +648,115 @@ describe("GET /api/users/:username", () => {
       });
   });
 });
+
+describe("GET /api/articles (pagination)", () => {
+    test("200: defaults to limit=10 and p=1, and responds with total_count", () => {
+      return request(app)
+        .get("/api/articles")
+        .expect(200)
+        .then(({ body }) => {
+          expect(body).toHaveProperty("articles");
+          expect(body.articles).toBeArray();
+          expect(body).toHaveProperty("total_count");
+          expect(body.total_count).toBeNumber();
+          expect(body.articles.length).toBeLessThanOrEqual(10);
+        });
+    });
+  
+    test("200: accepts limit query and returns that many articles", () => {
+      return request(app)
+        .get("/api/articles?limit=5")
+        .expect(200)
+        .then(({ body }) => {
+          expect(body.articles).toBeArray();
+          expect(body.articles).toHaveLength(5);
+          expect(body.total_count).toBeNumber();
+        });
+    });
+  
+    test("200: accepts p query and returns the correct page (calculated using limit)", () => {
+      const page1 = request(app).get("/api/articles?limit=5&p=1").expect(200);
+      const page2 = request(app).get("/api/articles?limit=5&p=2").expect(200);
+  
+      return Promise.all([page1, page2]).then((responses) => {
+        const body1 = responses[0].body;
+        const body2 = responses[1].body;
+        expect(body1.articles).toHaveLength(5);
+        expect(body2.articles).toHaveLength(5);
+        const ids1 = body1.articles.map((a) => a.article_id);
+        const ids2 = body2.articles.map((a) => a.article_id);
+        ids1.forEach((id) => expect(ids2).not.toContain(id));
+      });
+    });
+  
+    test("200: total_count ignores limit (returns total number of articles matching filters)", () => {
+      const noLimit = request(app).get("/api/articles").expect(200);
+      const limited = request(app).get("/api/articles?limit=5").expect(200);
+  
+      return Promise.all([noLimit, limited]).then(([res1, res2]) => {
+        expect(res1.body.total_count).toBeNumber();
+        expect(res2.body.total_count).toBeNumber();
+        expect(res2.body.total_count).toBe(res1.body.total_count);
+      });
+    });
+  
+    test("200: total_count respects filters (e.g. topic)", () => {
+      return request(app)
+        .get("/api/articles?topic=mitch&limit=5&p=1")
+        .expect(200)
+        .then(({ body }) => {
+          expect(body.total_count).toBeNumber();
+          expect(body.articles).toBeArray();
+          body.articles.forEach((article) => {
+            expect(article.topic).toBe("mitch");
+          });
+        });
+    });
+  
+    test("400: invalid limit (not a number)", () => {
+      return request(app)
+        .get("/api/articles?limit=not-a-number")
+        .expect(400)
+        .then(({ body }) => {
+          expect(body.msg).toBe("Bad request");
+        });
+    });
+  
+    test("400: invalid p (not a number)", () => {
+      return request(app)
+        .get("/api/articles?p=not-a-number")
+        .expect(400)
+        .then(({ body }) => {
+          expect(body.msg).toBe("Bad request");
+        });
+    });
+  
+    test("400: limit must be positive", () => {
+      return request(app)
+        .get("/api/articles?limit=0")
+        .expect(400)
+        .then(({ body }) => {
+          expect(body.msg).toBe("Bad request");
+        });
+    });
+  
+    test("400: p must be positive", () => {
+      return request(app)
+        .get("/api/articles?limit=5&p=0")
+        .expect(400)
+        .then(({ body }) => {
+          expect(body.msg).toBe("Bad request");
+        });
+    });
+  
+    test("200: p is out of range -> returns empty array (but total_count still present)", () => {
+      return request(app)
+        .get("/api/articles?limit=5&p=999")
+        .expect(200)
+        .then(({ body }) => {
+          expect(body.total_count).toBeNumber();
+          expect(body.articles).toBeArray();
+          expect(body.articles).toEqual([]);
+        });
+    });
+  });

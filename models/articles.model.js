@@ -1,8 +1,14 @@
 const db = require("../db/connection");
+const format = require("pg-format");
 const BadRequestError = require("../errors/BadRequestError");
 
-exports.fetchAllArticles = (sort_by = "created_at", order = "desc", topic) => {
-
+exports.fetchAllArticles = (
+  sort_by = "created_at",
+  order = "desc",
+  topic,
+  limit = 10,
+  p = 1
+) => {
   const validSortBys = [
     "author",
     "title",
@@ -13,30 +19,33 @@ exports.fetchAllArticles = (sort_by = "created_at", order = "desc", topic) => {
     "article_img_url",
     "comment_count",
   ];
-
   const validOrders = ["asc", "desc"];
 
-  if (!validSortBys.includes(sort_by)) {
-    throw new BadRequestError("Bad request");
-  }
+  if (!validSortBys.includes(sort_by)) throw new BadRequestError("Bad request");
 
   order = order.toLowerCase();
-  if (!validOrders.includes(order)) {
+  if (!validOrders.includes(order)) throw new BadRequestError("Bad request");
+
+  limit = Number(limit);
+  p = Number(p);
+  if (!Number.isInteger(limit) || limit < 1)
     throw new BadRequestError("Bad request");
-  }
+  if (!Number.isInteger(p) || p < 1) throw new BadRequestError("Bad request");
+
+  const offset = (p - 1) * limit;
 
   const sortColumn =
     sort_by === "comment_count" ? "comment_count" : `articles.${sort_by}`;
 
   const values = [];
   let whereStr = "";
-
   if (topic) {
     values.push(topic);
-    whereStr = "WHERE articles.topic = $1"
+    whereStr = "WHERE articles.topic = $1";
   }
 
-  const queryStr = `
+  const queryStr = format(
+    `
     SELECT
       articles.author,
       articles.title,
@@ -45,14 +54,22 @@ exports.fetchAllArticles = (sort_by = "created_at", order = "desc", topic) => {
       articles.created_at,
       articles.votes,
       articles.article_img_url,
-      COUNT(comments.comment_id)::INT AS comment_count
+      COUNT(comments.comment_id)::INT AS comment_count,
+      COUNT(*) OVER()::INT AS total_count
     FROM articles
     LEFT JOIN comments
       ON comments.article_id = articles.article_id
-      ${whereStr}
+    %s
     GROUP BY articles.article_id
-    ORDER BY ${sortColumn} ${order};
-  `;
+    ORDER BY %s %s
+    LIMIT %L OFFSET %L;
+    `,
+    whereStr,
+    sortColumn,
+    order,
+    limit,
+    offset
+  );
 
   return db.query(queryStr, values).then(({ rows }) => rows);
 };
@@ -130,4 +147,3 @@ exports.insertArticle = ({ author, title, body, topic, article_img_url }) => {
     )
     .then(({ rows }) => rows[0]);
 };
-

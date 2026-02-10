@@ -4,6 +4,7 @@ const {
   fetchCommentsByArticleId,
   insertComment,
   updateArticleVotesById,
+  insertArticle
  } = require("../models/articles.model");
 
 const { fetchUserByUsername } = require("../models/users.model");
@@ -59,4 +60,35 @@ exports.updateArticleVotesById = (article_id, inc_votes) => {
     if (!article) throw new NotFoundError("Article not found");
     return article;
   });
+};
+
+exports.addArticle = (newArticle) => {
+  const { author, title, body, topic, article_img_url } = newArticle;
+
+  if (!author || !title || !body || !topic) {
+    throw new BadRequestError("Bad request");
+  }
+
+  const defaultImgUrl =
+    "https://images.pexels.com/photos/158651/news-newsletter-newspaper-information-158651.jpeg?w=700&h=700";
+
+  const imgUrl = article_img_url || defaultImgUrl;
+  return fetchUserByUsername(author)
+    .then((user) => {
+      if (!user) throw new NotFoundError("User not found");
+      return fetchTopicBySlug(topic);
+    })
+    .then((foundTopic) => {
+      if (!foundTopic) throw new NotFoundError("Topic not found");
+      return insertArticle({
+        author,
+        title,
+        body,
+        topic,
+        article_img_url: imgUrl,
+      });
+    })
+    .then((insertedArticle) => {
+      return fetchArticleById(insertedArticle.article_id);
+    });
 };

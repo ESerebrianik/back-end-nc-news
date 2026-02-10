@@ -267,6 +267,104 @@ describe("POST /api/articles/:article_id/comments", () => {
   });
 });
 
+describe("POST /api/articles", () => {
+    test("201: should add a new article and return it with required properties", () => {
+      const newArticle = {
+        author: "butter_bridge",
+        title: "My new article",
+        body: "Hello world",
+        topic: "mitch",
+        article_img_url: "https://example.com/image.jpg",
+      };
+  
+      return request(app)
+        .post("/api/articles")
+        .send(newArticle)
+        .expect(201)
+        .then(({ body }) => {
+          const { article } = body;
+          expect(article).toBeObject();
+          expect(article.article_id).toBeNumber();
+          expect(article.author).toBe("butter_bridge");
+          expect(article.title).toBe("My new article");
+          expect(article.body).toBe("Hello world");
+          expect(article.topic).toBe("mitch");
+          expect(article.article_img_url).toBe("https://example.com/image.jpg");
+          expect(article.votes).toBeNumber();
+          expect(Number.isNaN(Date.parse(article.created_at))).toBe(false);
+          expect(article.comment_count).toBe(0); 
+        });
+    });
+  
+    test("201: should default article_img_url when not provided", () => {
+      const newArticle = {
+        author: "butter_bridge",
+        title: "No image provided",
+        body: "Image should default",
+        topic: "mitch",
+      };
+  
+      return request(app)
+        .post("/api/articles")
+        .send(newArticle)
+        .expect(201)
+        .then(({ body }) => {
+          const { article } = body;
+          expect(article.article_img_url).toBeString();
+          expect(article.article_img_url.length).toBeGreaterThan(0);
+        });
+    });
+  
+    test("400: should return Bad request when required fields are missing", () => {
+      const badArticle = {
+        author: "butter_bridge",
+        title: "Missing body and topic",
+      };
+  
+      return request(app)
+        .post("/api/articles")
+        .send(badArticle)
+        .expect(400)
+        .then(({ body }) => {
+          expect(body.msg).toBe("Bad request");
+        });
+    });
+  
+    test("404: should return User not found when author does not exist", () => {
+      const newArticle = {
+        author: "not-a-user",
+        title: "Bad author",
+        body: "test",
+        topic: "mitch",
+      };
+  
+      return request(app)
+        .post("/api/articles")
+        .send(newArticle)
+        .expect(404)
+        .then(({ body }) => {
+          expect(body.msg).toBe("User not found");
+        });
+    });
+  
+    test("404: should return Topic not found when topic does not exist", () => {
+      const newArticle = {
+        author: "butter_bridge",
+        title: "Bad topic",
+        body: "test",
+        topic: "not-a-topic",
+      };
+  
+      return request(app)
+        .post("/api/articles")
+        .send(newArticle)
+        .expect(404)
+        .then(({ body }) => {
+          expect(body.msg).toBe("Topic not found");
+        });
+    });
+});
+
 describe("PATCH /api/articles/:article_id", () => {
   test("200: should increment votes by inc_votes and return the updated article", () => {
     return request(app)
@@ -526,6 +624,8 @@ describe("GET /api/articles (topic query)", () => {
       });
   });
 });
+
+
 
 describe("GET /api/users/:username", () => {
   test("200: returns a user object", () => {

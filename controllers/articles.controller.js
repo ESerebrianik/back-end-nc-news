@@ -3,7 +3,8 @@ const {
   getArticleById: getArticleByIdService,
   getCommentsByArticleId: getCommentsByArticleIdService,
   addCommentByArticleId: addCommentByArticleIdService,
-  updateArticleVotesById: updateArticleVotesByIdService
+  updateArticleVotesById: updateArticleVotesByIdService,
+  addArticle
    } = require("../services/articles.service");
 
 exports.getArticles = (req, res, next) => {
@@ -68,6 +69,20 @@ exports.patchArticleById = (req, res, next) => {
   updateArticleVotesByIdService(article_id, inc_votes)
     .then((article) => {
       res.status(200).send({ article });
+    })
+    .catch(next);
+};
+
+exports.postArticle = (req, res, next) => {
+  const { author, title, body, topic, article_img_url } = req.body;
+
+  if (!author || !title || !body || !topic) {
+    return res.status(400).send({ msg: "Bad request" });
+  }
+
+  addArticle({ author, title, body, topic, article_img_url })
+    .then((article) => {
+      res.status(201).send({ article });
     })
     .catch(next);
 };

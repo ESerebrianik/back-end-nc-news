@@ -1,7 +1,7 @@
 const BadRequestError = require("../errors/BadRequestError");
 const NotFoundError = require("../errors/NotFoundError");
 
-const { deleteCommentById } = require("../models/comments.model");
+const { deleteCommentById, patchCommentVotesById } = require("../models/comments.model");
 
 exports.removeCommentById = (comment_id) => {
   if (isNaN(Number(comment_id))) {
@@ -12,5 +12,12 @@ exports.removeCommentById = (comment_id) => {
     if (!deletedComment) {
       throw new NotFoundError("Comment not found");
     }
+  });
+};
+
+exports.updateCommentVotesById = (comment_id, inc_votes) => {
+  return patchCommentVotesById(comment_id, inc_votes).then((comment) => {
+    if (!comment) throw new NotFoundError("Comment not found");
+    return comment;
   });
 };

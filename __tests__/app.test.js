@@ -376,6 +376,72 @@ describe("DELETE /api/comments/:comment_id", () => {
   });
 });
 
+describe("PATCH /api/comments/:comment_id", () => {
+    test("200: should increment votes by inc_votes and return updated comment", () => {
+        return request(app)
+        .patch("/api/comments/1")
+        .send({inc_votes: 1})
+        .expect(200)
+        .then(({body}) => {
+            const { comment } = body;
+            expect(comment).toBeObject();
+            expect(comment.comment_id).toBe(1);
+            expect(comment.votes).toBeNumber();
+        })
+    })
+
+    test("200 should decrement votes when inc_votes is negative", () => {
+        return request(app)
+        .patch("/api/comments/1")
+        .send({inc_votes: -1})
+        .expect(200)
+        .then(({ body }) => {
+            expect(body.comment.comment_id).toBe(1);
+            expect(body.comment.votes).toBeNumber();
+        })
+    })
+
+    test("400: bad request when comment_id is not a number", () => {
+        return request(app)
+          .patch("/api/comments/not-a-number")
+          .send({ inc_votes: 1 })
+          .expect(400)
+          .then(({ body }) => {
+            expect(body.msg).toBe("Bad request");
+          });
+      });
+    
+      test("400: bad request when inc_votes is missing", () => {
+        return request(app)
+          .patch("/api/comments/1")
+          .send({})
+          .expect(400)
+          .then(({ body }) => {
+            expect(body.msg).toBe("Bad request");
+          });
+      });
+    
+      test("400: bad request when inc_votes is not a number", () => {
+        return request(app)
+          .patch("/api/comments/1")
+          .send({ inc_votes: "one" })
+          .expect(400)
+          .then(({ body }) => {
+            expect(body.msg).toBe("Bad request");
+          });
+      });
+    
+      test("404: comment not found when comment_id does not exist", () => {
+        return request(app)
+          .patch("/api/comments/9999")
+          .send({ inc_votes: 1 })
+          .expect(404)
+          .then(({ body }) => {
+            expect(body.msg).toBe("Comment not found");
+          });
+      });
+})
+
 describe("GET /api/articles (sorting queries)", () => {
   test("200: should sort articles by votes when sort_by=votes", () => {
     return request(app)

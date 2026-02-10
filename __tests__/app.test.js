@@ -460,3 +460,27 @@ describe("GET /api/articles (topic query)", () => {
       });
   });
 });
+
+describe("GET /api/users/:username", () => {
+  test("200: returns a user object", () => {
+    return request(app)
+      .get("/api/users/butter_bridge")
+      .expect(200)
+      .then(({ body }) => {
+        const { user } = body;
+        expect(user).toBeObject();
+        expect(user.username).toBe("butter_bridge");
+        expect(typeof user.name).toBe("string");
+        expect(typeof user.avatar_url).toBe("string");
+      });
+  });
+
+  test("404: user not found", () => {
+    return request(app)
+      .get("/api/users/not-a-user")
+      .expect(404)
+      .then(({ body }) => {
+        expect(body.msg).toBe("User not found");
+      });
+  });
+});

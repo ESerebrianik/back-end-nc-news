@@ -132,19 +132,4 @@
   }
   
 
-  table {
-    width: 100%;
-    border-collapse: collapse;
-    margin: 1rem 0;
-  }
-  
-  th,
-  td {
-    border: 1px solid var(--border);
-    padding: 0.5rem;
-    text-align: left;
-  }
-  
-  th {
-    background-color: #f3f4f6;
-  }
+ 

@@ -12,17 +12,21 @@ const { fetchTopicBySlug } = require("../models/topics.model");
 const BadRequestError = require("../errors/BadRequestError");
 const NotFoundError = require("../errors/NotFoundError");
 
-exports.getAllArticles = (sort_by, order, topic, limit = 10, p = 1) => {
-  return fetchAllArticles(sort_by, order, topic, limit, p).then((rows) => {
-    // rows обязаны быть массивом
+exports.getAllArticles = (sort_by, order, topic, author, limit = 10, p = 1, q) => {
+  return fetchAllArticles(sort_by, order, topic, author, limit, p, q).then((rows) => {
     const total_count = rows.length ? rows[0].total_count : 0;
-
     const articles = rows.map(({ total_count, ...article }) => article);
 
-    // важно: если topic есть и статей нет — проверяем, существует ли topic
     if (topic && articles.length === 0) {
       return fetchTopicBySlug(topic).then((foundTopic) => {
         if (!foundTopic) throw new NotFoundError("Topic not found");
+        return { articles: [], total_count: 0 };
+      });
+    }
+
+    if (author && articles.length === 0) {
+      return fetchUserByUsername(author).then((user) => {
+        if (!user) throw new NotFoundError("User not found");
         return { articles: [], total_count: 0 };
       });
     }

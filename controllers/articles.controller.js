@@ -7,10 +7,10 @@ const {
   addArticle
    } = require("../services/articles.service");
 
-   exports.getArticles = (req, res, next) => {
-    const { sort_by, order, topic, limit, p } = req.query;
+exports.getArticles = (req, res, next) => {
+    const { sort_by, order, topic, author, limit, p, q } = req.query;
   
-    getAllArticles(sort_by, order, topic, limit, p)
+    getAllArticles(sort_by, order, topic, author, limit, p, q)
       .then(({ articles, total_count }) => {
         res.status(200).send({ articles, total_count });
       })

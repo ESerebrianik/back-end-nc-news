@@ -6,8 +6,10 @@ exports.fetchAllArticles = (
   sort_by = "created_at",
   order = "desc",
   topic,
+  author,
   limit = 10,
-  p = 1
+  p = 1,
+  q
 ) => {
   const validSortBys = [
     "author",
@@ -38,11 +40,28 @@ exports.fetchAllArticles = (
     sort_by === "comment_count" ? "comment_count" : `articles.${sort_by}`;
 
   const values = [];
-  let whereStr = "";
+  const conditions = [];
+
   if (topic) {
     values.push(topic);
-    whereStr = "WHERE articles.topic = $1";
+    conditions.push(`articles.topic = $${values.length}`);
   }
+
+  if (author) {
+    values.push(author);
+    conditions.push(`articles.author = $${values.length}`);
+  }
+
+  if (q) {
+    const term = `%${q}%`;
+    values.push(term);
+    const idx = values.length;
+    conditions.push(
+      `(articles.title ILIKE $${idx} OR articles.author ILIKE $${idx})`
+    );
+  }
+
+  const whereStr = conditions.length ? `WHERE ${conditions.join(" AND ")}` : "";
 
   const queryStr = format(
     `

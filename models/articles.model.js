@@ -71,6 +71,7 @@ exports.fetchAllArticles = (
       articles.article_id,
       articles.topic,
       articles.created_at,
+      articles.body,
       articles.votes,
       articles.article_img_url,
       COUNT(comments.comment_id)::INT AS comment_count,
